@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+@theme {
+  --color-zinda: #6B21A8;
+  --color-zinda-light: #F5F0FF;
+  --color-zinda-text: #1F2937;
+}
