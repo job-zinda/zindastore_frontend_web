@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
-import api from "../api/axios";
+import api, { getImageUrl } from "../api/axios";
 
 export default function BrandsPage() {
   const [brands, setBrands] = useState([]);
@@ -9,21 +9,22 @@ export default function BrandsPage() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const getImageUrl = (path) => {
-    if (!path) return null;
-    if (path.startsWith("http://") || path.startsWith("https://")) return path;
-    const baseUrl = api.defaults.baseURL? api.defaults.baseURL.replace("/api", "") : "http://127.0.0.1:8000";
-    return `${baseUrl}${path.startsWith("/")? "" : "/"}${path}`;
-  };
-
   useEffect(() => {
     setLoading(true);
-    Promise.all([api.get("/brands/").catch(() => ({ data: [] })), api.get("/products/").catch(() => ({ data: [] }))])
-    .then(([brandRes, prodRes]) => { setBrands(brandRes.data || []); setProducts(prodRes.data || []); })
+    Promise.all([
+      api.get("/brands/").catch(() => ({ data: [] })), 
+      api.get("/products/").catch(() => ({ data: [] }))
+    ])
+    .then(([brandRes, prodRes]) => { 
+      const brandData = brandRes.data?.results || brandRes.data || [];
+      const prodData = prodRes.data?.results || prodRes.data || [];
+      setBrands(brandData); 
+      setProducts(prodData); 
+    })
     .finally(() => setLoading(false));
   }, []);
 
-  const isProductInBrand = (product, brand) => {  return true };
+  const isProductInBrand = (product, brand) => { return true };
 
   const handleBrandClick = (brand) => {
     const slugOrId = brand.slug || brand.id;

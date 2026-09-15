@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Search, ChevronRight } from "lucide-react";
-import api from "../api/axios";
+import api, { getImageUrl } from "../api/axios";
 
 export default function BrandProductsPage() {
   const { brandSlug } = useParams();
@@ -12,16 +12,6 @@ export default function BrandProductsPage() {
 
   const navigate = useNavigate();
 
-  const getImageUrl = (path) => {
-    if (!path) return "https://via.placeholder.com/400?text=No+Image";
-    if (typeof path !== "string") return "https://via.placeholder.com/400?text=No+Image";
-    if (path.startsWith("http://") || path.startsWith("https://")) return path;
-    const baseUrl = api.defaults.baseURL
-      ? api.defaults.baseURL.replace("/api", "")
-      : "http://127.0.0.1:8000";
-    return `${baseUrl}${path.startsWith("/") ? "" : "/"}${path}`;
-  };
-
   useEffect(() => {
     setLoading(true);
 
@@ -29,13 +19,12 @@ export default function BrandProductsPage() {
       api.get("/products/").catch(() => ({ data: { results: [] } })),
       api.get("/brands/").catch(() => ({ data: { results: [] } })),
     ])
-   .then(([prodRes, brandRes]) => {
-        const allProducts = Array.isArray(prodRes.data) ? prodRes.data : prodRes.data?.results || [];
-        const allBrands = Array.isArray(brandRes.data) ? brandRes.data : brandRes.data?.results || [];
+     .then(([prodRes, brandRes]) => {
+        const allProducts = Array.isArray(prodRes.data)? prodRes.data : prodRes.data?.results || [];
+        const allBrands = Array.isArray(brandRes.data)? brandRes.data : brandRes.data?.results || [];
 
         const param = String(brandSlug || "").toLowerCase().trim();
 
-        
         const currentBrand = allBrands.find((b) => {
           const bId = String(b.id || "").toLowerCase().trim();
           const bSlug = String(b.slug || "").toLowerCase().trim();
@@ -46,15 +35,15 @@ export default function BrandProductsPage() {
         if (currentBrand) {
           setBrandName(currentBrand.name);
         } else {
-          setBrandName(brandSlug ? brandSlug.replace(/-/g, " ").toUpperCase() : "Brand Products");
+          setBrandName(brandSlug? brandSlug.replace(/-/g, " ").toUpperCase() : "Brand Products");
         }
 
         const matchedProducts = allProducts.filter((p) => {
-          if (!p.brand && !p.brand_id && !p.brand_slug && !p.brand_name) return false;
+          if (!p.brand &&!p.brand_id &&!p.brand_slug &&!p.brand_name) return false;
 
           let pBrandId = "", pBrandName = "", pBrandSlug = "";
 
-          if (typeof p.brand === "object" && p.brand !== null) {
+          if (typeof p.brand === "object" && p.brand!== null) {
             pBrandId = String(p.brand.id || "").toLowerCase().trim();
             pBrandName = String(p.brand.name || "").toLowerCase().trim();
             pBrandSlug = String(p.brand.slug || "").toLowerCase().trim();
@@ -68,13 +57,12 @@ export default function BrandProductsPage() {
             const cBrandId = String(currentBrand.id || "").toLowerCase().trim();
             const cBrandName = String(currentBrand.name || "").toLowerCase().trim();
             const cBrandSlug = String(currentBrand.slug || "").toLowerCase().trim();
-            
+
             if (pBrandId && pBrandId === cBrandId) return true;
             if (pBrandName && pBrandName === cBrandName) return true;
             if (pBrandSlug && pBrandSlug === cBrandSlug) return true;
           }
 
-         
           if (param) {
             if (pBrandId === param) return true;
             if (pBrandName === param) return true;
@@ -86,8 +74,8 @@ export default function BrandProductsPage() {
 
         setProducts(matchedProducts);
       })
-   .catch((err) => console.error("Error fetching brand products:", err))
-   .finally(() => setLoading(false));
+     .catch((err) => console.error("Error fetching brand products:", err))
+     .finally(() => setLoading(false));
   }, [brandSlug]);
 
   const filteredProducts = products.filter((item) =>
@@ -96,9 +84,7 @@ export default function BrandProductsPage() {
 
   return (
     <div className="bg-[#FAF8FC] min-h-screen pb-12">
-     
       <div className="max-w-3xl mx-auto p-4 space-y-4">
-        
         <div className="bg-white p-4 rounded-2xl border-gray-100 shadow-xs">
           <h1 className="text-2xl font-bold text-gray-900">{brandName}</h1>
           <p className="text-xs text-gray-500 mt-1">{filteredProducts.length} Products</p>
@@ -115,11 +101,11 @@ export default function BrandProductsPage() {
           <Search size={18} className="text-gray-400 absolute left-4 top-3.5" />
         </div>
 
-        {loading ? (
+        {loading? (
           <div className="flex justify-center py-12">
             <div className="w-8 h-8 border-4 border-[#8E24AA] border-t-transparent rounded-full animate-spin"></div>
           </div>
-        ) : filteredProducts.length === 0 ? (
+        ) : filteredProducts.length === 0? (
           <div className="p-8 text-center text-gray-500 bg-white rounded-2xl shadow-xs">
             No products found in this brand.
           </div>

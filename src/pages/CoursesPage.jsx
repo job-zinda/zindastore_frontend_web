@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Search } from "lucide-react";
-import api from "../api/axios";
+import api, { getImageUrl } from "../api/axios";
 
-const BASE_URL = "http://localhost:8000"; 
 export default function CoursesPage() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,13 +20,13 @@ export default function CoursesPage() {
       endpoint = `/courses/?category=${categorySlug}`;
     }
     api.get(endpoint)
-    .then((res) => setCourses(res.data.results || res.data || []))
-    .catch((err) => console.error(err))
-    .finally(() => setLoading(false));
+   .then((res) => setCourses(res.data.results || res.data || []))
+   .catch((err) => console.error(err))
+   .finally(() => setLoading(false));
   }, [categorySlug]);
 
   const filteredCourses = courses.filter((c) =>
-   !searchQuery.trim() || (c.title || "").toLowerCase().includes(searchQuery.toLowerCase())
+  !searchQuery.trim() || (c.title || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -46,8 +45,8 @@ export default function CoursesPage() {
          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
            {filteredCourses.map((course) => (
              <div key={course.id} onClick={() => navigate(`/course/${course.slug}`)} className="bg-white rounded-2xl p-3 border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all">
-               <img 
-                 src={course.thumbnail? `${BASE_URL}${course.thumbnail}` : "/placeholder.jpg"} 
+               <img
+                 src={course.thumbnail? getImageUrl(course.thumbnail) : "/placeholder.jpg"}
                  alt={course.title}
                  className="w-full h-36 object-cover rounded-xl mb-3 bg-gray-100"
                  onError={(e) => e.target.src = "/placeholder.jpg"}

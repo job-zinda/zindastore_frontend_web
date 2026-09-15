@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../api/axios";
+import api, { getImageUrl } from "../api/axios";
 import ProductCard from "../components/ProductCard";
 import SimpleCard from "../components/SimpleCard";
 import {
@@ -42,15 +42,16 @@ export default function HomePage() {
       api.get("/brands/").catch(() => ({ data: [] })),
       fetchBanners
     ])
-  .then(([prodRes, courseRes, servRes, brandRes, bannerRes]) => {
-        setProducts(prodRes.data || []);
-        setCourses(courseRes.data || []);
-        setServices(servRes.data || []);
-        setBrands(brandRes.data || []);
-        setBanners(bannerRes.data || []);
+ .then(([prodRes, courseRes, servRes, brandRes, bannerRes]) => {
+        const getList = (res) => res.data?.results || res.data || [];
+        setProducts(getList(prodRes));
+        setCourses(getList(courseRes));
+        setServices(getList(servRes));
+        setBrands(getList(brandRes));
+        setBanners(getList(bannerRes));
       })
-  .catch((err) => console.error("Error fetching homepage data:", err))
-  .finally(() => setLoading(false));
+ .catch((err) => console.error("Error fetching homepage data:", err))
+ .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -84,7 +85,6 @@ export default function HomePage() {
     );
   };
 
-  
   const handleBrandClick = (brand) => {
     const slugOrId = brand.slug || brand.id;
     const brandProducts = getBrandProducts(brand);
@@ -92,7 +92,7 @@ export default function HomePage() {
       const singleProduct = brandProducts[0];
       navigate(`/product/${singleProduct.slug || singleProduct.id}`);
     } else {
-      navigate(`/brands/${slugOrId}`); 
+      navigate(`/brands/${slugOrId}`);
     }
   };
 
@@ -111,7 +111,6 @@ export default function HomePage() {
   return (
     <div className="max-w-6xl mx-auto px-4 pt-4 pb-12 space-y-6">
 
-      {/* TABS SECTION */}
       <div className="bg-gray-100 p-1 rounded-full flex justify-center items-center gap-2">
         {["Products", "Courses", "Services"].map((tab) => (
           <button
@@ -129,7 +128,6 @@ export default function HomePage() {
         ))}
       </div>
 
-      {/* Search Bar */}
       <div className="relative">
         <input
           type="text"
@@ -141,11 +139,15 @@ export default function HomePage() {
         <Search size={20} className="text-gray-400 absolute left-4 top-3.5" />
       </div>
 
-      {/* BANNERS */}
       {banners.length > 0? (
         <div className="relative w-full overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
           <div onClick={() => handleBannerClick(banners[currentBannerIndex])} className="cursor-pointer">
-            <img src={banners[currentBannerIndex]?.image_url} alt={banners[currentBannerIndex]?.title || "Banner"} className="w-full h-44 sm:h-60 md:h-72 object-cover rounded-2xl transition-transform duration-500 hover:scale-105"/>
+            <img
+              src={getImageUrl(banners[currentBannerIndex]?.image || banners[currentBannerIndex]?.image_url)}
+              alt={banners[currentBannerIndex]?.title || "Banner"}
+              className="w-full h-44 sm:h-60 md:h-72 object-cover rounded-2xl transition-transform duration-500 hover:scale-105"
+              onError={(e) => e.target.style.display='none'}
+            />
           </div>
           {banners.length > 1 && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
@@ -157,7 +159,6 @@ export default function HomePage() {
         </div>
       ) : null}
 
-      {/* BROWSE SECTION */}
       <section className="pt-2">
         <div className="flex justify-between items-center mb-3">
           <h3 className="font-bold text-gray-800 text-lg">Browse</h3>
@@ -180,7 +181,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* MAIN CONTENT */}
       {loading? (
         <div className="flex flex-col items-center justify-center py-16">
           <div className="w-10 h-10 border-4 border-[#7B2CBF] border-t-transparent rounded-full animate-spin"></div>
@@ -272,7 +272,6 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Collab Banner */}
       <div className="mt-12 bg-white rounded-2xl border-gray-100 p-6 text-center shadow-xs hover:shadow-md transition-all duration-300 hover:-translate-y-1 flex-col items-center justify-center">
         <h2 className="text-2xl font-black tracking-tight text-gray-800 mb-1"><span className="text-[#7B2CBF]">zinda</span> store</h2>
         <a href={collabWhatsappUrl} target="_blank" rel="noopener noreferrer" className="flex flex-col items-center group cursor-pointer mt-2">

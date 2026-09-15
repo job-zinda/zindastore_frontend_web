@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   Share2, ShoppingBag, MessageSquare, Star, Edit3, Zap, Check, X
 } from "lucide-react";
-import api from "../api/axios";
+import api, { getImageUrl } from "../api/axios";
 import { useCart } from "../context/CartContext";
 
 export default function ProductDetail() {
@@ -26,22 +26,10 @@ export default function ProductDetail() {
   const [newNameOrEmail, setNewNameOrEmail] = useState("");
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
 
-  const getImageUrl = (imageSource) => {
-    if (!imageSource) return "https://via.placeholder.com/400?text=No+Image";
-    let path = typeof imageSource === "object"? imageSource.image : imageSource;
-    if (!path || typeof path!== "string") return "https://via.placeholder.com/400?text=No+Image";
-    if (path.startsWith("http://") || path.startsWith("https://")) return path;
-    const backendHost = api.defaults.baseURL? api.defaults.baseURL.replace("/api", "") : "http://127.0.0.1:8000";
-    const cleanPath = path.startsWith("/")? path : `/${path}`;
-    return `${backendHost}${cleanPath}`;
-  };
-
-
   const getImagesForVariant = (variant, allImages) => {
     if (!variant ||!allImages) return allImages || [];
-   
     const variantImages = allImages.filter(img => img.variant === variant.id);
-    return variantImages.length > 0? variantImages : allImages; 
+    return variantImages.length > 0? variantImages : allImages;
   };
 
   useEffect(() => {
@@ -52,23 +40,22 @@ export default function ProductDetail() {
       api.get(`/products/${productSlug}/`),
       api.get(`/products/${productSlug}/reviews/`).catch(() => ({ data: [] }))
     ])
-  .then(([prodRes, reviewRes]) => {
+.then(([prodRes, reviewRes]) => {
         const prodData = prodRes.data;
         setProduct(prodData);
-        setReviews(reviewRes.data || []);
+        setReviews(reviewRes.data?.results || reviewRes.data || []);
 
         if (prodData.variants && prodData.variants.length > 0) {
           const firstVariant = prodData.variants[0];
           setSelectedVariant(firstVariant);
-        
           const firstImages = getImagesForVariant(firstVariant, prodData.images);
           setActiveImage(firstImages?.[0] || null);
         } else {
           setActiveImage(prodData.images?.[0] || null);
         }
       })
-  .catch((err) => console.error("Error fetching product details:", err))
-  .finally(() => setLoading(false));
+.catch((err) => console.error("Error fetching product details:", err))
+.finally(() => setLoading(false));
   }, [productSlug]);
 
   const handleSelectVariant = (variant) => {
@@ -155,17 +142,17 @@ export default function ProductDetail() {
     api.post(`/products/${targetSlug}/reviews/`, {
       rating: newRating, title: newTitle, body: newBody, name_or_email: newNameOrEmail
     })
-  .then((res) => {
+.then((res) => {
         alert("Review submitted successfully!");
         setReviews([res.data,...reviews]);
         setShowModal(false);
         setNewTitle(""); setNewBody(""); setNewNameOrEmail("");
       })
-  .catch((err) => {
+.catch((err) => {
         console.error("Review Submit Error:", err);
         alert("Failed to submit review. Please try again.");
       })
-  .finally(() => setReviewSubmitting(false));
+.finally(() => setReviewSubmitting(false));
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-[#FAF8FC]"><div className="w-10 h-10 border-4 border-[#8E24AA] border-t-transparent rounded-full animate-spin"></div></div>;
@@ -214,7 +201,7 @@ export default function ProductDetail() {
               {product.variants.map((variant) => {
                 const isSelected = selectedVariant?.id === variant.id;
                 const label = variant.variant_attributes && Object.keys(variant.variant_attributes).length > 0
-              ? Object.values(variant.variant_attributes).join(" - ")
+             ? Object.values(variant.variant_attributes).join(" - ")
                   : variant.sku || `Option ${variant.id}`;
                 return (
                   <button key={variant.id} onClick={() => handleSelectVariant(variant)} className={`px-4 py-2 rounded-xl text-xs font-semibold border transition-all duration-300 cursor-pointer hover:-translate-y-0.5 hover:shadow-md ${isSelected? "bg-[#8E24AA] text-white border-[#8E24AA] shadow-sm" : "bg-white text-gray-700 border-gray-200 hover:border-purple-300"}`}>
@@ -271,7 +258,7 @@ export default function ProductDetail() {
               <div><label className="block text-xs text-gray-600 font-semibold mb-1">Rating</label><div className="flex gap-2">{[1, 2, 3, 4, 5].map((star) => <button type="button" key={star} onClick={() => setNewRating(star)} className="text-amber-500 cursor-pointer"><Star size={24} fill={star <= newRating? "currentColor" : "none"} /></button>)}</div></div>
               <div><label className="block text-xs text-gray-600 font-semibold mb-1">Name / Email</label><input type="text" required value={newNameOrEmail} onChange={(e) => setNewNameOrEmail(e.target.value)} className="w-full border border-gray-300 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-[#8E24AA] outline-none"/></div>
               <div><label className="block text-xs text-gray-600 font-semibold mb-1">Title</label><input type="text" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="w-full border border-gray-300 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-[#8E24AA] outline-none"/></div>
-              <div><label className="block text-xs text-gray-600 font-semibold mb-1">Review</label><textarea rows="3" required value={newBody} onChange={(e) => setNewBody(e.target.value)} className="w-full border-gray-300 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-[#8E24AA] outline-none"></textarea></div>
+              <div><label className="block text-xs text-gray-600 font-semibold mb-1">Review</label><textarea rows="3" required value={newBody} onChange={(e) => setNewBody(e.target.value)} className="w-full border border-gray-300 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-[#8E24AA] outline-none"></textarea></div>
               <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 rounded-xl text-xs text-gray-500 cursor-pointer">Cancel</button><button type="submit" disabled={reviewSubmitting} className="px-5 py-2 rounded-xl text-xs bg-[#8E24AA] text-white cursor-pointer disabled:opacity-50 font-semibold">{reviewSubmitting? "Submitting..." : "Submit"}</button></div>
             </form>
           </div>

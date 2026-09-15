@@ -1,16 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Share2, MessageSquare, Check, Zap } from "lucide-react";
-import api from "../api/axios";
-
-const BASE_URL = "http://localhost:8000"; 
-
-// Helper function to handle image URL
-const getImageUrl = (img) => {
-  if (!img) return null;
-  if (img.startsWith("http")) return img; 
-  return `${BASE_URL}${img}`; 
-}
+import api, { getImageUrl } from "../api/axios";
 
 export default function ServiceDetail() {
   const { id, slug } = useParams();
@@ -32,7 +23,6 @@ export default function ServiceDetail() {
     customer_email: "",
   });
 
-  // Razorpay SDK load 
   useEffect(() => {
     const script = document.createElement("script");
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
@@ -148,7 +138,7 @@ export default function ServiceDetail() {
 
   const displayPrice = service.base_price || service.price || "0.00";
   const displayMRP = service.mrp_price || service.mrp;
-  const imageSrc = getImageUrl(service.thumbnail || service.image); 
+  const imageSrc = getImageUrl(service.thumbnail || service.image || service.primary_image);
 
   return (
     <div className="bg-[#FAF8FC] min-h-screen pb-12">
@@ -160,7 +150,7 @@ export default function ServiceDetail() {
               src={imageSrc} 
               alt={service.title} 
               className="max-h-60 object-contain rounded-lg bg-gray-100"
-              onError={(e) => e.target.src = "/placeholder.jpg"}
+              onError={(e) => e.target.style.display='none'}
             />
           ) : (
             <div className="text-[#8E24AA] text-3xl font-black uppercase tracking-widest">zinda</div>

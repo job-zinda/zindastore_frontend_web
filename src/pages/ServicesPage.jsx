@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Wrench } from "lucide-react";
-import api from "../api/axios";
-
-const BASE_URL = "http://localhost:8000"; 
+import api, { getImageUrl } from "../api/axios";
 
 export default function ServicesPage() {
   const [services, setServices] = useState([]);
@@ -21,9 +19,9 @@ export default function ServicesPage() {
       endpoint = `/services/?category=${categorySlug}`;
     }
     api.get(endpoint)
-    .then((res) => setServices(res.data.results || res.data || []))
-    .catch((err) => console.error(err))
-    .finally(() => setLoading(false));
+   .then((res) => setServices(res.data.results || res.data || []))
+   .catch((err) => console.error(err))
+   .finally(() => setLoading(false));
   }, [categorySlug]);
 
   return (
@@ -38,15 +36,15 @@ export default function ServicesPage() {
          services.length === 0? <div className="bg-white p-12 text-center text-gray-500 rounded-2xl shadow-xs">No services found in this category</div> :
          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
            {services.map((service) => (
-             <div key={service.id} onClick={() => navigate(`/service/${service.slug}`)} className="bg-white rounded-2xl p-4 border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all">
-               <img 
-                 src={service.thumbnail? `${BASE_URL}${service.thumbnail}` : "/placeholder.jpg"}
+             <div key={service.id} onClick={() => navigate(`/service/${service.slug || service.id}`)} className="bg-white rounded-2xl p-4 border-gray-100 shadow-xs cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all">
+               <img
+                 src={getImageUrl(service.thumbnail || service.image)}
                  alt={service.title}
                  className="w-full h-40 object-cover rounded-xl mb-3 bg-gray-100"
-                 onError={(e) => e.target.src = "/placeholder.jpg"}
+                 onError={(e) => e.target.style.display='none'}
                />
                <h3 className="font-bold text-gray-800">{service.title}</h3>
-               <p className="font-bold text-[#8E24AA] text-sm mt-2">₹{Number(service.base_price).toLocaleString()}</p>
+               <p className="font-bold text-[#8E24AA] text-sm mt-2">₹{Number(service.base_price || service.price || 0).toLocaleString()}</p>
              </div>
            ))}
          </div>}
