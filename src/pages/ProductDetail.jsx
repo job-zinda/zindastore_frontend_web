@@ -27,7 +27,8 @@ export default function ProductDetail() {
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
 
   const getImagesForVariant = (variant, allImages) => {
-    if (!variant ||!allImages) return allImages || [];
+    if (!allImages ||!Array.isArray(allImages)) return [];
+    if (!variant) return allImages;
     const variantImages = allImages.filter(img => img.variant === variant.id);
     return variantImages.length > 0? variantImages : allImages;
   };
@@ -49,7 +50,7 @@ export default function ProductDetail() {
           const firstVariant = prodData.variants[0];
           setSelectedVariant(firstVariant);
           const firstImages = getImagesForVariant(firstVariant, prodData.images);
-          setActiveImage(firstImages?.[0] || null);
+          setActiveImage(firstImages?.[0] || prodData.images?.[0] || null);
         } else {
           setActiveImage(prodData.images?.[0] || null);
         }
