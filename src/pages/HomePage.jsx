@@ -3,62 +3,63 @@ import { useNavigate } from "react-router-dom";
 import api, { getImageUrl } from "../api/axios";
 import ProductCard from "../components/ProductCard";
 import SimpleCard from "../components/SimpleCard";
-import {
-  ShoppingBag,
-  BookOpen,
-  Wrench,
-  Search,
-  Store,
-  ChevronRight,
-  Hand
-} from "lucide-react";
+import { ShoppingBag, BookOpen, Wrench, Search, Store, ChevronRight, Hand } from "lucide-react";
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState("Products");
   const [subTab, setSubTab] = useState("all");
-
   const [products, setProducts] = useState([]);
   const [courses, setCourses] = useState([]);
   const [services, setServices] = useState([]);
   const [brands, setBrands] = useState([]);
-
   const [banners, setBanners] = useState([]);
   const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
-
   const [showAllProducts, setShowAllProducts] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-
   const navigate = useNavigate();
 
   useEffect(() => {
     setLoading(true);
-    const fetchBanners = api.get("/banners/").catch(() => api.get("/cms/banners/")).catch(() => ({ data: [] }));
+
+    // FIXED: HTML response varumbol [] return cheyyum, string aayal array alla
+    const safeGet = async (url) => {
+      try {
+        const r = await api.get(url);
+        // Vercel il env illaenkil HTML varum - athine block
+        if (typeof r.data === 'string' && r.data.includes('<!DOCTYPE')) {
+          console.warn(`${url} returned HTML, not JSON`);
+          return [];
+        }
+        const list = r.data?.results || r.data || [];
+        return Array.isArray(list)? list : [];
+      } catch (err) {
+        console.warn(`API fail ${url}`, err?.response?.status);
+        return [];
+      }
+    };
 
     Promise.all([
-      api.get("/products/"),
-      api.get("/courses/"),
-      api.get("/services/"),
-      api.get("/brands/").catch(() => ({ data: [] })),
-      fetchBanners
+      safeGet("/products/"),
+      safeGet("/courses/"),
+      safeGet("/services/"),
+      safeGet("/brands/"),
+      safeGet("/banners/"),
     ])
- .then(([prodRes, courseRes, servRes, brandRes, bannerRes]) => {
-        const getList = (res) => res.data?.results || res.data || [];
-        setProducts(getList(prodRes));
-        setCourses(getList(courseRes));
-        setServices(getList(servRes));
-        setBrands(getList(brandRes));
-        setBanners(getList(bannerRes));
-      })
- .catch((err) => console.error("Error fetching homepage data:", err))
- .finally(() => setLoading(false));
+  .then(([prod, course, serv, brand, banner]) => {
+        console.log("Products:", prod.length, "Banners:", banner.length);
+        setProducts(prod);
+        setCourses(course);
+        setServices(serv);
+        setBrands(brand);
+        setBanners(banner);
+    })
+  .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     if (banners.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentBannerIndex((prev) => (prev + 1) % banners.length);
-    }, 5000);
+    const interval = setInterval(() => setCurrentBannerIndex((prev) => (prev + 1) % banners.length), 5000);
     return () => clearInterval(interval);
   }, [banners]);
 
@@ -71,38 +72,25 @@ export default function HomePage() {
   };
 
   const getBrandProducts = (brand) => {
-    if (brand.products && Array.isArray(brand.products) && brand.products.length > 0) {
-      return filterItems(brand.products);
-    }
-    return filterItems(
-      products.filter((p) => {
+    if (brand.products?.length) return filterItems(brand.products);
+    return filterItems(products.filter((p) => {
         if (!p.brand) return false;
-        if (typeof p.brand === "object") {
-          return p.brand.id === brand.id || p.brand.slug === brand.slug || p.brand.name?.toLowerCase() === brand.name?.toLowerCase();
-        }
-        return p.brand === brand.id || p.brand === brand.slug || String(p.brand).toLowerCase() === brand.name?.toLowerCase();
-      })
-    );
+        if (typeof p.brand === "object") return p.brand.id === brand.id || p.brand.slug === brand.slug;
+        return String(p.brand).toLowerCase() === brand.name?.toLowerCase();
+    }));
   };
 
   const handleBrandClick = (brand) => {
     const slugOrId = brand.slug || brand.id;
     const brandProducts = getBrandProducts(brand);
-    if (brandProducts.length === 1) {
-      const singleProduct = brandProducts[0];
-      navigate(`/product/${singleProduct.slug || singleProduct.id}`);
-    } else {
-      navigate(`/brands/${slugOrId}`);
-    }
+    if (brandProducts.length === 1) navigate(`/product/${brandProducts[0].slug || brandProducts[0].id}`);
+    else navigate(`/brands/${slugOrId}`);
   };
 
   const handleBannerClick = (banner) => {
     if (!banner) return;
-    if (banner.link_path) {
-      navigate(banner.link_path);
-    } else if (banner.link_url) {
-      window.open(banner.link_url, "_blank");
-    }
+    if (banner.link_path) navigate(banner.link_path);
+    else if (banner.link_url) window.open(banner.link_url, "_blank");
   };
 
   const whatsappMessage = encodeURIComponent("Hi, I am interested in advertising or collaborating with Zinda Store.");
@@ -110,44 +98,23 @@ export default function HomePage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 pt-4 pb-12 space-y-6">
-
       <div className="bg-gray-100 p-1 rounded-full flex justify-center items-center gap-2">
         {["Products", "Courses", "Services"].map((tab) => (
-          <button
-            key={tab}
-            onClick={() => {setActiveTab(tab); setSubTab("all");}}
-            className={`flex-1 flex items-center justify-center gap-2 text-sm font-semibold py-2 px-4 rounded-full transition-all duration-300 hover:-translate-y-0.5 ${
-              activeTab === tab? "bg-white text-[#7B2CBF] shadow-sm" : "text-gray-600 hover:text-black"
-            }`}
-          >
-            {tab === "Products" && <ShoppingBag size={16} />}
-            {tab === "Courses" && <BookOpen size={16} />}
-            {tab === "Services" && <Wrench size={16} />}
-            {tab}
+          <button key={tab} onClick={() => {setActiveTab(tab); setSubTab("all");}} className={`flex-1 flex items-center justify-center gap-2 text-sm font-semibold py-2 px-4 rounded-full transition-all ${activeTab === tab? "bg-white text-[#7B2CBF] shadow-sm" : "text-gray-600"}`}>
+            {tab === "Products" && <ShoppingBag size={16} />} {tab === "Courses" && <BookOpen size={16} />} {tab === "Services" && <Wrench size={16} />} {tab}
           </button>
         ))}
       </div>
 
       <div className="relative">
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder={`Search ${activeTab.toLowerCase()}...`}
-          className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 pl-11 text-sm focus:outline-none focus:ring-2 focus:ring-[#7B2CBF] shadow-sm text-gray-700"
-        />
+        <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={`Search ${activeTab.toLowerCase()}...`} className="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 pl-11 text-sm focus:outline-none focus:ring-2 focus:ring-[#7B2CBF] shadow-sm" />
         <Search size={20} className="text-gray-400 absolute left-4 top-3.5" />
       </div>
 
-      {banners.length > 0? (
-        <div className="relative w-full overflow-hidden rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
+      {banners.length > 0 && (
+        <div className="relative w-full overflow-hidden rounded-2xl shadow-sm">
           <div onClick={() => handleBannerClick(banners[currentBannerIndex])} className="cursor-pointer">
-            <img
-              src={getImageUrl(banners[currentBannerIndex]?.image || banners[currentBannerIndex]?.image_url)}
-              alt={banners[currentBannerIndex]?.title || "Banner"}
-              className="w-full h-44 sm:h-60 md:h-72 object-cover rounded-2xl transition-transform duration-500 hover:scale-105"
-              onError={(e) => e.target.style.display='none'}
-            />
+            <img src={getImageUrl(banners[currentBannerIndex]?.image || banners[currentBannerIndex]?.image_url)} alt={banners[currentBannerIndex]?.title || "Banner"} className="w-full h-44 sm:h-60 md:h-72 object-cover rounded-2xl transition-transform duration-500 hover:scale-105" onError={(e) => e.target.style.display='none'} />
           </div>
           {banners.length > 1 && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
@@ -157,7 +124,7 @@ export default function HomePage() {
             </div>
           )}
         </div>
-      ) : null}
+      )}
 
       <section className="pt-2">
         <div className="flex justify-between items-center mb-3">
@@ -166,14 +133,13 @@ export default function HomePage() {
             See categories <ChevronRight size={16} />
           </button>
         </div>
-
         <div className="flex gap-3 overflow-x-auto pb-1">
           {activeTab === "Products" && (
             <>
-              <button onClick={() => navigate("/brands")} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:bg-[#F6EFF8] hover:border-[#7B2CBF] hover:-translate-y-0.5 transition-all duration-300 shadow-xs">
+              <button onClick={() => navigate("/brands")} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:bg-[#F6EFF8] hover:border-[#7B2CBF] transition-all shadow-xs">
                 <Store size={16} /> Brands
               </button>
-              <button onClick={() => setSubTab("all")} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border-gray-200 hover:bg-[#F6EFF8] hover:border-[#7B2CBF] hover:-translate-y-0.5 transition-all duration-300 shadow-xs">
+              <button onClick={() => setSubTab("all")} className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium bg-white text-gray-700 border-gray-200 hover:bg-[#F6EFF8] hover:border-[#7B2CBF] transition-all shadow-xs">
                 <ShoppingBag size={16} /> All Products
               </button>
             </>
@@ -197,7 +163,7 @@ export default function HomePage() {
                     {showAllProducts? "Show less" : "See all"}
                   </button>
                 </div>
-                {filterItems(products).length === 0? <p className="text-gray-500 text-sm py-8 text-center bg-white rounded-2xl">No products found</p> : (
+                {filterItems(products).length === 0? <p className="text-gray-500 text-sm py-8 text-center bg-white rounded-2xl">No products found - check backend</p> : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {(showAllProducts? filterItems(products) : filterItems(products).slice(0, 4)).map((product) => (
                       <div key={product.id} className="bg-white rounded-2xl border-gray-100 shadow-xs transition-all duration-300 hover:-translate-y-1 hover:shadow-md">

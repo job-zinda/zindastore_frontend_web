@@ -7,7 +7,7 @@ export default function ProductCard({ product }) {
 
   return (
     <Link
-      to={`/product/${product.slug}`}
+      to={`/product/${product.slug || product.id}`}
       className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 hover:shadow-md transition flex flex-col justify-between"
     >
       <div>
