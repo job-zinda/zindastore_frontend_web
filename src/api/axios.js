@@ -1,23 +1,34 @@
 import axios from "axios";
 
-const rawBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "https://zindastorebackendweb-production.up.railway.app/api";
-const baseURL = rawBase.replace(/\/+$/, "");
+const RAILWAY_BASE = "https://zindastorebackendweb-production.up.railway.app";
 
-const rawMedia = import.meta.env.VITE_MEDIA_BASE_URL || "https://zindastorebackendweb-production.up.railway.app";
-const mediaBase = rawMedia.replace(/\/+$/, "");
+function getBaseUrl() {
+  
+  let raw = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || `${RAILWAY_BASE}/api`;
+  
+  raw = raw.trim().replace(/\/+$/, "");
+
+  if (!raw.endsWith("/api")) {
+    raw = `${raw}/api`;
+  }
+  
+  return raw;
+}
 
 const api = axios.create({
-  baseURL,
-  timeout: 15000,
+  baseURL: getBaseUrl(),
+  timeout: 20000,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 export function getImageUrl(img) {
-  if (!img) return "https://via.placeholder.com/400x400?text=No+Image";
-  let url = typeof img === 'object'? (img.image || img.file || img.url || img.src || img.thumbnail || "") : img;
-  if (!url || typeof url!== 'string') return "https://via.placeholder.com/400x400?text=No+Image";
+  if (!img) return "https://via.placeholder.com/400?text=No+Image";
+  let url = typeof img === 'object' ? (img.image || img.thumbnail || img.url || "") : img;
+  if (!url) return "https://via.placeholder.com/400?text=No+Image";
   if (url.startsWith('http')) return url;
-  if (url.startsWith('/')) return `${mediaBase}${url}`;
-  return `${mediaBase}/${url}`;
+  return `${RAILWAY_BASE}${url.startsWith('/') ? url : `/${url}`}`;
 }
 
 export default api;
