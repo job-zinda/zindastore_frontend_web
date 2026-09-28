@@ -24,13 +24,23 @@ export default function BrandsPage() {
     .finally(() => setLoading(false));
   }, []);
 
-  const isProductInBrand = (product, brand) => { return true };
+  const isProductInBrand = (product, brand) => {
+    if (!product || !brand) return false;
+    const brandId = String(brand.id || "").toLowerCase();
+    const brandSlug = String(brand.slug || "").toLowerCase();
+    
+    const pBrandObj = typeof product.brand === "object" && product.brand !== null ? product.brand : {};
+    const pBrandId = String(pBrandObj.id || product.brand || product.brand_id || "").toLowerCase();
+    const pBrandSlug = String(pBrandObj.slug || product.brand_slug || "").toLowerCase();
+
+    return (brandId && pBrandId === brandId) || (brandSlug && pBrandSlug === brandSlug);
+  };
 
   const handleBrandClick = (brand) => {
     const slugOrId = brand.slug || brand.id;
-    const brandProducts = brand.products?.length > 0? brand.products : products.filter((p) => isProductInBrand(p, brand));
+    const brandProducts = brand.products?.length > 0 ? brand.products : products.filter((p) => isProductInBrand(p, brand));
     if (brandProducts.length === 1) {
-      navigate(`/product/${brandProducts[0].id}`);
+      navigate(`/product/${brandProducts[0].slug || brandProducts[0].id}`);
     } else {
       navigate(`/brands/${slugOrId}`); 
     }
@@ -43,9 +53,9 @@ export default function BrandsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Brands</h1>
         </div>
 
-        {loading? (
+        {loading ? (
           <div className="flex justify-center py-12"><div className="w-8 h-8 border-4 border-[#8E24AA] border-t-transparent rounded-full animate-spin"></div></div>
-        ) : brands.length === 0? (
+        ) : brands.length === 0 ? (
           <div className="p-8 text-center text-gray-500 bg-white rounded-2xl shadow-xs">No brands found.</div>
         ) : (
           <div className="space-y-3">
@@ -54,7 +64,7 @@ export default function BrandsPage() {
               return (
                 <div key={brand.id} onClick={() => handleBrandClick(brand)} className="bg-white rounded-2xl p-4 border-gray-100 shadow-xs flex items-center gap-4 hover:bg-purple-50/50 hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer">
                   <div className="w-12 h-12 rounded-full overflow-hidden bg-purple-50 flex justify-center items-center shrink-0 border-purple-100">
-                    {imageUrl? <img src={imageUrl} alt={brand.name} className="w-full h-full object-cover" /> : <span className="text-[#8E24AA] font-extrabold text-lg">{brand.name?.charAt(0).toUpperCase() || "B"}</span>}
+                    {imageUrl ? <img src={imageUrl} alt={brand.name} className="w-full h-full object-cover" /> : <span className="text-[#8E24AA] font-extrabold text-lg">{brand.name?.charAt(0).toUpperCase() || "B"}</span>}
                   </div>
                   <div className="flex-1">
                     <h3 className="font-bold text-gray-800 text-base">{brand.name}</h3>

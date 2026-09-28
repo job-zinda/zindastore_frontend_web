@@ -22,11 +22,11 @@ export default function HomePage() {
   useEffect(() => {
     setLoading(true);
 
-    // FIXED: HTML response varumbol [] return cheyyum, string aayal array alla
+
     const safeGet = async (url) => {
       try {
         const r = await api.get(url);
-        // Vercel il env illaenkil HTML varum - athine block
+       
         if (typeof r.data === 'string' && r.data.includes('<!DOCTYPE')) {
           console.warn(`${url} returned HTML, not JSON`);
           return [];

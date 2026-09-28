@@ -19,9 +19,9 @@ export default function BrandProductsPage() {
       api.get("/products/").catch(() => ({ data: { results: [] } })),
       api.get("/brands/").catch(() => ({ data: { results: [] } })),
     ])
-     .then(([prodRes, brandRes]) => {
-        const allProducts = Array.isArray(prodRes.data)? prodRes.data : prodRes.data?.results || [];
-        const allBrands = Array.isArray(brandRes.data)? brandRes.data : brandRes.data?.results || [];
+      .then(([prodRes, brandRes]) => {
+        const allProducts = Array.isArray(prodRes.data) ? prodRes.data : prodRes.data?.results || [];
+        const allBrands = Array.isArray(brandRes.data) ? brandRes.data : brandRes.data?.results || [];
 
         const param = String(brandSlug || "").toLowerCase().trim();
 
@@ -35,22 +35,22 @@ export default function BrandProductsPage() {
         if (currentBrand) {
           setBrandName(currentBrand.name);
         } else {
-          setBrandName(brandSlug? brandSlug.replace(/-/g, " ").toUpperCase() : "Brand Products");
+          setBrandName(brandSlug ? decodeURIComponent(brandSlug).replace(/-/g, " ").toUpperCase() : "Brand Products");
         }
 
         const matchedProducts = allProducts.filter((p) => {
-          if (!p.brand &&!p.brand_id &&!p.brand_slug &&!p.brand_name) return false;
+          if (!p.brand && !p.brand_id && !p.brand_slug && !p.brand_name) return false;
 
           let pBrandId = "", pBrandName = "", pBrandSlug = "";
 
-          if (typeof p.brand === "object" && p.brand!== null) {
+          if (typeof p.brand === "object" && p.brand !== null) {
             pBrandId = String(p.brand.id || "").toLowerCase().trim();
             pBrandName = String(p.brand.name || "").toLowerCase().trim();
             pBrandSlug = String(p.brand.slug || "").toLowerCase().trim();
           } else {
             pBrandId = String(p.brand || p.brand_id || "").toLowerCase().trim();
-            pBrandName = String(p.brand || p.brand_name || "").toLowerCase().trim();
-            pBrandSlug = String(p.brand || p.brand_slug || "").toLowerCase().trim();
+            pBrandName = String(p.brand_name || (typeof p.brand === 'string' ? p.brand : '')).toLowerCase().trim();
+            pBrandSlug = String(p.brand_slug || "").toLowerCase().trim();
           }
 
           if (currentBrand) {
@@ -58,9 +58,9 @@ export default function BrandProductsPage() {
             const cBrandName = String(currentBrand.name || "").toLowerCase().trim();
             const cBrandSlug = String(currentBrand.slug || "").toLowerCase().trim();
 
-            if (pBrandId && pBrandId === cBrandId) return true;
-            if (pBrandName && pBrandName === cBrandName) return true;
-            if (pBrandSlug && pBrandSlug === cBrandSlug) return true;
+            if (cBrandId && pBrandId === cBrandId) return true;
+            if (cBrandName && pBrandName === cBrandName) return true;
+            if (cBrandSlug && pBrandSlug === cBrandSlug) return true;
           }
 
           if (param) {
@@ -74,8 +74,8 @@ export default function BrandProductsPage() {
 
         setProducts(matchedProducts);
       })
-     .catch((err) => console.error("Error fetching brand products:", err))
-     .finally(() => setLoading(false));
+      .catch((err) => console.error("Error fetching brand products:", err))
+      .finally(() => setLoading(false));
   }, [brandSlug]);
 
   const filteredProducts = products.filter((item) =>
@@ -101,11 +101,11 @@ export default function BrandProductsPage() {
           <Search size={18} className="text-gray-400 absolute left-4 top-3.5" />
         </div>
 
-        {loading? (
+        {loading ? (
           <div className="flex justify-center py-12">
             <div className="w-8 h-8 border-4 border-[#8E24AA] border-t-transparent rounded-full animate-spin"></div>
           </div>
-        ) : filteredProducts.length === 0? (
+        ) : filteredProducts.length === 0 ? (
           <div className="p-8 text-center text-gray-500 bg-white rounded-2xl shadow-xs">
             No products found in this brand.
           </div>

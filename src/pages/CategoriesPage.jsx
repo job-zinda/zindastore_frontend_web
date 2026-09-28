@@ -15,7 +15,6 @@ export default function CategoriesPage() {
     const fetchCategoriesWithCount = async () => {
       setLoading(true);
       try {
-       
         const catRes = await api.get(`/categories/?type=${categoryType}`);
         const cats = catRes.data.results || catRes.data || [];
 
@@ -26,19 +25,27 @@ export default function CategoriesPage() {
         const itemsRes = await api.get(itemsEndpoint);
         const allItems = itemsRes.data.results || itemsRes.data || [];
 
-     
         const catsWithCount = cats
-         .map((cat) => {
+          .map((cat) => {
             const count = allItems.filter((item) => {
-              const itemCatName =
-                typeof item.category === "object" && item.category!== null
-                 ? item.category.name
-                  : item.category;
-              return itemCatName === cat.name;
+              const catObj = typeof item.category === "object" && item.category !== null ? item.category : {};
+              const itemCatName = (catObj.name || item.category_name || item.category || "").toString().toLowerCase();
+              const itemCatSlug = (catObj.slug || item.category_slug || "").toString().toLowerCase();
+              const itemCatId = (catObj.id || item.category_id || "").toString().toLowerCase();
+
+              const currentCatName = (cat.name || "").toString().toLowerCase();
+              const currentCatSlug = (cat.slug || "").toString().toLowerCase();
+              const currentCatId = (cat.id || "").toString().toLowerCase();
+
+              return (
+                (itemCatId && itemCatId === currentCatId) ||
+                (itemCatSlug && itemCatSlug === currentCatSlug) ||
+                (itemCatName && itemCatName === currentCatName)
+              );
             }).length;
-            return {...cat, item_count: count };
+            return { ...cat, item_count: count };
           })
-         .filter((cat) => cat.item_count > 0); 
+          .filter((cat) => cat.item_count > 0);
 
         setCategories(catsWithCount);
       } catch (err) {
@@ -53,20 +60,20 @@ export default function CategoriesPage() {
 
   const headerTitle =
     categoryType === "service"
-     ? "Service Categories"
+      ? "Service Categories"
       : categoryType === "course"
-     ? "Course Categories"
+      ? "Course Categories"
       : "Product Categories";
 
   const CategoryIcon =
-    categoryType === "service"? Wrench : categoryType === "course"? BookOpen : Package;
+    categoryType === "service" ? Wrench : categoryType === "course" ? BookOpen : Package;
 
   const handleCategoryClick = (cat) => {
-    const query = `type=${categoryType}&category=${cat.slug}&category_name=${encodeURIComponent(
+    const query = `type=${categoryType}&category=${cat.slug || cat.id}&category_name=${encodeURIComponent(
       cat.name
     )}`;
     const route =
-      categoryType === "service"? "services" : categoryType === "course"? "courses" : "products";
+      categoryType === "service" ? "services" : categoryType === "course" ? "courses" : "products";
     navigate(`/${route}?${query}`);
   };
 
@@ -78,11 +85,11 @@ export default function CategoriesPage() {
           <h1 className="text-2xl font-bold text-gray-900">{headerTitle}</h1>
         </div>
 
-        {loading? (
+        {loading ? (
           <div className="flex justify-center py-12">
             <div className="w-8 h-8 border-4 border-[#8E24AA] border-t-transparent rounded-full animate-spin"></div>
           </div>
-        ) : categories.length === 0? (
+        ) : categories.length === 0 ? (
           <div className="p-8 text-center text-gray-500 bg-white rounded-2xl shadow-xs">
             No categories found
           </div>
@@ -97,7 +104,7 @@ export default function CategoriesPage() {
                 <div>
                   <h3 className="font-bold text-gray-800 text-base">{cat.name}</h3>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {cat.item_count} {cat.item_count === 1? "Item" : "Items"}
+                    {cat.item_count} {cat.item_count === 1 ? "Item" : "Items"}
                   </p>
                 </div>
                 <ChevronRight size={18} className="text-gray-400" />
