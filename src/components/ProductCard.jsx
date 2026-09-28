@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 export default function ProductCard({ product }) {
   const salePrice = product.sale_price || product.variants?.[0]?.sale_price || product.base_price;
   const mrpPrice = product.mrp_price || product.variants?.[0]?.mrp_price;
+  const imgSrc = product.thumbnail || product.images?.[0] || null;
 
   return (
     <Link
@@ -12,16 +13,17 @@ export default function ProductCard({ product }) {
     >
       <div>
         <img
-          src={getImageUrl(product.thumbnail || product.images?.[0]?.image)}
+          src={getImageUrl(imgSrc)}
           alt={product.title}
-          className="w-full h-40 object-cover rounded-lg mb-2"
+          className="w-full h-40 object-cover rounded-lg mb-2 bg-gray-50"
+          onError={(e)=>{ e.target.src="https://via.placeholder.com/400?text=No+Image"; }}
         />
-        <p className="text-xs text-gray-400 font-medium">{product.brand || "Zinda"}</p>
+        <p className="text-xs text-gray-400 font-medium">{product.brand?.name || product.brand || "Zinda"}</p>
         <h3 className="font-semibold text-sm text-zinda-text truncate">{product.title}</h3>
       </div>
       <div className="flex items-center gap-2 mt-2">
         <p className="text-zinda font-bold">₹{salePrice}</p>
-        {mrpPrice && (
+        {mrpPrice && Number(mrpPrice) > Number(salePrice) && (
           <p className="text-xs line-through text-gray-400">₹{mrpPrice}</p>
         )}
       </div>
