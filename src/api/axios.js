@@ -29,10 +29,10 @@ export function getImageUrl(img) {
   if (url.includes("localhost") || url.includes("127.0.0.1") || url.includes("7070") || url.includes("37857") || url.includes(":8000")) {
     try {
       const u = new URL(url);
-      return `${HOSTINGER_BASE}${u.pathname}`;
+      return `${HOSTINGER_BASE_URL}${u.pathname}`;
     } catch {
       const fileName = url.split("/").pop().split("?")[0];
-      return `${HOSTINGER_BASE}/media/${fileName}`;
+      return `${HOSTINGER_BASE_URL}/media/${fileName}`;
     }
   }
 
@@ -40,7 +40,7 @@ export function getImageUrl(img) {
   if (url.startsWith("//")) return `https:${url}`;
 
   const cleanPath = url.startsWith("/")? url : `/${url}`;
-  return `${HOSTINGER_BASE}${cleanPath}`;
+  return `${HOSTINGER_BASE_URL}${cleanPath}`;
 }
 
 export default api;

@@ -48,6 +48,7 @@ export default function App() {
             <Route path="/service/:slug" element={<ServiceDetail />} />
 
             <Route path="/course/:slug" element={<CourseDetail />} />
+            <Route path="/courses/:slug" element={<CourseDetail />} />
             <Route path="/cart" element={<CartPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Share2, MessageSquare, Check, Zap } from "lucide-react";
 import api, { getImageUrl } from "../api/axios";
+import ReviewsSection from "../components/ReviewsSection";
 
 export default function ServiceDetail() {
   const { id, slug } = useParams();
@@ -230,81 +231,18 @@ export default function ServiceDetail() {
           </div>
         )}
 
-        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-xs space-y-2 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
-          <label className="block text-xs font-semibold text-gray-700">
-            Have a Referral Code?
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Enter referral code"
-              value={referralCode}
-              onChange={(e) => setReferralCode(e.target.value)}
-              className="flex-1 bg-[#F6EFF8] border border-purple-100 rounded-xl px-3 py-2.5 text-xs outline-none focus:border-[#8E24AA] focus:ring-1 focus:ring-[#8E24AA]"
-            />
-            <button
-              type="button"
-              onClick={handleApplyReferral}
-              disabled={referralSuccess}
-              className={`px-5 py-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                referralSuccess
-                  ? "bg-green-100 text-green-700"
-                  : "bg-[#8E24AA] text-white hover:bg-[#7b1fa2]"
-              }`}
-            >
-              {referralSuccess ? "Applied ✓" : "Apply"}
-            </button>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-xs space-y-3 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
-          <h3 className="block text-sm font-semibold text-gray-800">
-            Contact Details
-          </h3>
-          <input
-            name="customer_name"
-            placeholder="Full name *"
-            value={form.customer_name}
-            onChange={handleChange}
-            className="w-full bg-[#F6EFF8] border border-purple-100 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#8E24AA] focus:ring-1 focus:ring-[#8E24AA]"
-          />
-          <input
-            name="customer_phone"
-            placeholder="Phone *"
-            value={form.customer_phone}
-            onChange={handleChange}
-            className="w-full bg-[#F6EFF8] border border-purple-100 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#8E24AA] focus:ring-1 focus:ring-[#8E24AA]"
-          />
-          <input
-            name="customer_email"
-            placeholder="Email"
-            value={form.customer_email}
-            onChange={handleChange}
-            className="w-full bg-[#F6EFF8] border border-purple-100 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#8E24AA] focus:ring-1 focus:ring-[#8E24AA]"
-          />
-        </div>
-
-        <div className="space-y-2.5 pt-2">
-          <button
-            onClick={handleBookNow}
-            disabled={processing || !sdkLoaded}
-            className="w-full bg-[#8E24AA] hover:bg-[#7b1fa2] text-white py-3.5 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-all shadow-md cursor-pointer disabled:opacity-50"
-          >
-            <Zap size={18} />
-            {processing
-              ? "Processing..."
-              : !sdkLoaded
-              ? "Loading Payment..."
-              : "Book Service"}
-          </button>
-
+        {/* Action Button - Let's Plan via WhatsApp */}
+        <div className="pt-2">
           <button
             onClick={handleLetsPlan}
-            className="w-full bg-[#FAF0F7] border border-purple-200 text-[#8E24AA] py-3.5 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-purple-100 hover:-translate-y-0.5 transition-all shadow-xs cursor-pointer"
+            className="w-full bg-[#8E24AA] hover:bg-[#7b1fa2] text-white py-3.5 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-all shadow-md cursor-pointer"
           >
             <MessageSquare size={18} /> Let's Plan (WhatsApp)
           </button>
         </div>
+
+        {/* Reviews Section */}
+        <ReviewsSection type="services" slug={service.slug || serviceParam} id={service.id} />
       </div>
     </div>
   );

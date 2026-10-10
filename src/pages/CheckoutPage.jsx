@@ -183,6 +183,45 @@ export default function CheckoutPage() {
         return alert("No item selected for checkout.");
       }
 
+      const cfData = res.data?.payment_intent?.cashfree;
+      if (cfData && cfData.payment_session_id) {
+        if (!window.Cashfree) {
+          setProcessing(false);
+          return alert("Cashfree SDK not loaded. Please refresh the page.");
+        }
+
+        const cashfree = window.Cashfree({
+          mode: cfData.environment === "production" ? "production" : "sandbox",
+        });
+
+        const checkoutResult = await cashfree.checkout({
+          paymentSessionId: cfData.payment_session_id,
+          redirectTarget: "_modal",
+        });
+
+        if (checkoutResult.error) {
+          console.error("Cashfree checkout error:", checkoutResult.error);
+          alert(checkoutResult.error.message || "Payment failed. Please try again.");
+          setProcessing(false);
+          return;
+        }
+
+        if (checkoutResult.paymentDetails) {
+          try {
+            await api.post("/payment/cashfree/verify/", {
+              order_number: res.data.order_number,
+            });
+            alert("Payment Successful! Order Ref: " + res.data.order_number);
+            navigate("/profile");
+          } catch (verifyErr) {
+            console.error("Verification error:", verifyErr);
+            alert("Payment completed but verification pending. Contact support with Ref: " + res.data.order_number);
+          }
+        }
+        setProcessing(false);
+        return;
+      }
+
       const razor = res.data?.payment_intent?.razorpay;
       if (!razor) {
         setProcessing(false);

@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Share2, MessageSquare, Check } from "lucide-react";
 import api, { getImageUrl } from "../api/axios";
+import ReviewsSection from "../components/ReviewsSection";
 
 export default function CourseDetail() {
   const { slug, id } = useParams();
   const courseParam = slug || id;
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,6 +23,22 @@ export default function CourseDetail() {
     customer_phone: "",
     customer_email: "",
   });
+
+  // Auto-verify if returning from Cashfree redirect payment
+  useEffect(() => {
+    const orderNumber = searchParams.get("order_number");
+    if (orderNumber) {
+      api
+        .post("/payment/cashfree/verify/", { order_number: orderNumber })
+        .then(() => {
+          alert("Enrollment Successful! Ref: " + orderNumber);
+          navigate("/profile");
+        })
+        .catch((err) => {
+          console.error("Redirect verification error:", err);
+        });
+    }
+  }, [searchParams, navigate]);
 
   useEffect(() => {
     if (!courseParam) return;
@@ -96,42 +114,45 @@ export default function CourseDetail() {
         referral_code: appliedReferral,
       });
 
-      const razor = res.data?.payment_intent?.razorpay;
-      if (!razor) return alert("Payment setup failed from server.");
-      if (!window.Razorpay) return alert("Razorpay SDK not loaded.");
+      const cfData = res.data?.payment_intent?.cashfree;
+      if (!cfData || !cfData.payment_session_id) {
+        return alert("Payment setup failed from server.");
+      }
 
-      const options = {
-        key: razor.key_id,
-        amount: razor.amount,
-        currency: razor.currency,
-        order_id: razor.order_id,
-        name: "Zinda Store",
-        description: `Course: ${course.title}`,
-        prefill: {
-          name: form.customer_name,
-          email: form.customer_email,
-          contact: form.customer_phone,
-        },
-        theme: { color: "#8E24AA" },
-        handler: async function (response) {
-          try {
-            await api.post("/payment/razorpay/verify/", {
-              token: response.razorpay_payment_id,
-              order_id: response.razorpay_order_id,
-              signature: response.razorpay_signature,
-            });
-            alert("Enrollment Successful! Ref: " + res.data.order_number);
-            navigate("/my-courses");
-          } catch (e) {
-            console.error(e);
-            alert("Payment successful but verification failed. Contact support.");
-          }
-        },
-        modal: { ondismiss: () => console.log("Payment Cancelled") },
-      };
+      // Initialize Cashfree SDK
+      if (!window.Cashfree) {
+        return alert("Cashfree SDK not loaded. Please refresh the page.");
+      }
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+      const cashfree = window.Cashfree({
+        mode: cfData.environment === "production" ? "production" : "sandbox",
+      });
+
+      // Open Cashfree checkout
+      const checkoutResult = await cashfree.checkout({
+        paymentSessionId: cfData.payment_session_id,
+        redirectTarget: "_modal",
+      });
+
+      if (checkoutResult.error) {
+        console.error("Cashfree checkout error:", checkoutResult.error);
+        alert(checkoutResult.error.message || "Payment failed. Please try again.");
+        return;
+      }
+
+      if (checkoutResult.paymentDetails) {
+        // Payment completed — verify on backend
+        try {
+          await api.post("/payment/cashfree/verify/", {
+            order_number: res.data.order_number,
+          });
+          alert("Enrollment Successful! Ref: " + res.data.order_number);
+          navigate("/profile");
+        } catch (verifyErr) {
+          console.error("Verification error:", verifyErr);
+          alert("Payment completed but verification pending. Contact support with Ref: " + res.data.order_number);
+        }
+      }
     } catch (err) {
       console.error(err);
       alert(
@@ -292,6 +313,9 @@ export default function CourseDetail() {
             <MessageSquare size={18} /> Let's Plan (WhatsApp)
           </button>
         </div>
+
+        {/* Reviews Section */}
+        <ReviewsSection type="courses" slug={course.slug || courseParam} id={course.id} />
       </div>
     </div>
   );
