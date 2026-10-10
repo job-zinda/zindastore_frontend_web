@@ -269,46 +269,11 @@ export default function CourseDetail() {
           </div>
         </div>
 
-        {/* Contact Details Form */}
-        <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-xs space-y-3 hover:shadow-md transition-all duration-300 hover:-translate-y-0.5">
-          <h3 className="block text-sm font-semibold text-gray-800">
-            Contact Details
-          </h3>
-          <input
-            name="customer_name"
-            placeholder="Full name *"
-            value={form.customer_name}
-            onChange={handleChange}
-            className="w-full bg-[#F6EFF8] border border-purple-100 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#8E24AA] focus:ring-1 focus:ring-[#8E24AA]"
-          />
-          <input
-            name="customer_phone"
-            placeholder="Phone *"
-            value={form.customer_phone}
-            onChange={handleChange}
-            className="w-full bg-[#F6EFF8] border border-purple-100 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#8E24AA] focus:ring-1 focus:ring-[#8E24AA]"
-          />
-          <input
-            name="customer_email"
-            placeholder="Email"
-            value={form.customer_email}
-            onChange={handleChange}
-            className="w-full bg-[#F6EFF8] border border-purple-100 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#8E24AA] focus:ring-1 focus:ring-[#8E24AA]"
-          />
-        </div>
-
-        {/* Action Buttons */}
-        <div className="space-y-2.5 pt-2">
-          <button
-            onClick={handleEnrollPayment}
-            className="w-full bg-[#8E24AA] hover:bg-[#7b1fa2] text-white py-3.5 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-all shadow-md cursor-pointer"
-          >
-            Ready to Pay
-          </button>
-
+        {/* Action Button - Let's Plan via WhatsApp (Online Payment temporarily hidden) */}
+        <div className="pt-2">
           <button
             onClick={handleLetsPlan}
-            className="w-full bg-[#FAF0F7] border border-purple-200 text-[#8E24AA] py-3.5 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-purple-100 hover:-translate-y-0.5 transition-all shadow-xs cursor-pointer"
+            className="w-full bg-[#8E24AA] hover:bg-[#7b1fa2] text-white py-3.5 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-all shadow-md cursor-pointer"
           >
             <MessageSquare size={18} /> Let's Plan (WhatsApp)
           </button>

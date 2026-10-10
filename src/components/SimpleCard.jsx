@@ -50,35 +50,15 @@ export default function SimpleCard({ item, type }) {
       </Link>
 
       {/* Clean Single Button Row */}
-      {type === "service" ? (
-        <div className="mt-4 pt-2 border-t border-purple-50">
-          <button
-            onClick={handleLetsPlan}
-            className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 bg-[#9C4196] hover:bg-[#83337e] text-white rounded-xl text-xs font-semibold transition cursor-pointer shadow-xs"
-          >
-            <MessageSquare size={14} className="shrink-0" />
-            <span className="truncate">Let's Plan</span>
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 gap-2 mt-4 pt-2 border-t border-purple-50">
-          <button
-            onClick={handleLetsPlan}
-            className="flex items-center justify-center gap-1.5 py-2.5 px-2 bg-purple-50/70 hover:bg-purple-100 border border-purple-100 rounded-xl text-xs font-semibold text-purple-900 transition cursor-pointer"
-          >
-            <MessageSquare size={14} className="text-[#9C4196] shrink-0" />
-            <span className="truncate">Let's Plan</span>
-          </button>
-
-          <button
-            onClick={handleReadyToPay}
-            className="flex items-center justify-center gap-1.5 py-2.5 px-2 bg-[#9C4196] hover:bg-[#83337e] text-white rounded-xl text-xs font-semibold transition cursor-pointer shadow-xs"
-          >
-            <CreditCard size={14} className="shrink-0" />
-            <span className="truncate">Ready to pay</span>
-          </button>
-        </div>
-      )}
+      <div className="mt-4 pt-2 border-t border-purple-50">
+        <button
+          onClick={handleLetsPlan}
+          className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 bg-[#9C4196] hover:bg-[#83337e] text-white rounded-xl text-xs font-semibold transition cursor-pointer shadow-xs"
+        >
+          <MessageSquare size={14} className="shrink-0" />
+          <span className="truncate">Let's Plan</span>
+        </button>
+      </div>
     </div>
   );
 }
