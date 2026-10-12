@@ -5,6 +5,44 @@ import ProductCard from "../components/ProductCard";
 import SimpleCard from "../components/SimpleCard";
 import { ShoppingBag, BookOpen, Wrench, Search, Store, ChevronRight, Hand } from "lucide-react";
 
+function BannerSlider({ items, onBannerClick }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (!items || items.length <= 1) return;
+    const interval = setInterval(() => setCurrentIndex((prev) => (prev + 1) % items.length), 5000);
+    return () => clearInterval(interval);
+  }, [items]);
+
+  if (!items || items.length === 0) return null;
+
+  const current = items[currentIndex] || items[0];
+
+  return (
+    <div className="relative w-full overflow-hidden rounded-2xl shadow-sm">
+      <div onClick={() => onBannerClick(current)} className="cursor-pointer">
+        <img
+          src={getImageUrl(current?.image || current?.image_url)}
+          alt={current?.title || "Banner"}
+          className="w-full h-44 sm:h-60 md:h-72 object-cover rounded-2xl transition-transform duration-500 hover:scale-105"
+          onError={(e) => { e.target.style.display = 'none'; }}
+        />
+      </div>
+      {items.length > 1 && (
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+          {items.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentIndex(idx)}
+              className={`h-2 rounded-full transition-all ${currentIndex === idx ? "w-6 bg-[#7B2CBF]" : "w-2 bg-white/70"}`}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState("Products");
   const [subTab, setSubTab] = useState("all");
@@ -13,7 +51,6 @@ export default function HomePage() {
   const [services, setServices] = useState([]);
   const [brands, setBrands] = useState([]);
   const [banners, setBanners] = useState([]);
-  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
   const [showAllProducts, setShowAllProducts] = useState(false);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,11 +94,9 @@ export default function HomePage() {
   .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => {
-    if (banners.length <= 1) return;
-    const interval = setInterval(() => setCurrentBannerIndex((prev) => (prev + 1) % banners.length), 5000);
-    return () => clearInterval(interval);
-  }, [banners]);
+  const topBanners = banners.filter((b) => !b.placement || b.placement === "home_top");
+  const midBanners = banners.filter((b) => b.placement === "home_mid");
+  const bottomBanners = banners.filter((b) => b.placement === "home_bottom");
 
   const filterItems = (items) => {
     if (!searchQuery.trim()) return items;
@@ -111,20 +146,8 @@ export default function HomePage() {
         <Search size={20} className="text-gray-400 absolute left-4 top-3.5" />
       </div>
 
-      {banners.length > 0 && (
-        <div className="relative w-full overflow-hidden rounded-2xl shadow-sm">
-          <div onClick={() => handleBannerClick(banners[currentBannerIndex])} className="cursor-pointer">
-            <img src={getImageUrl(banners[currentBannerIndex]?.image || banners[currentBannerIndex]?.image_url)} alt={banners[currentBannerIndex]?.title || "Banner"} className="w-full h-44 sm:h-60 md:h-72 object-cover rounded-2xl transition-transform duration-500 hover:scale-105" onError={(e) => e.target.style.display='none'} />
-          </div>
-          {banners.length > 1 && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
-              {banners.map((_, idx) => (
-                <button key={idx} onClick={() => setCurrentBannerIndex(idx)} className={`h-2 rounded-full transition-all ${currentBannerIndex === idx? "w-6 bg-[#7B2CBF]" : "w-2 bg-white/70"}`} />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      {/* Top Banner Slider */}
+      <BannerSlider items={topBanners} onBannerClick={handleBannerClick} />
 
       <section className="pt-2">
         <div className="flex justify-between items-center mb-3">
@@ -173,6 +196,13 @@ export default function HomePage() {
                   </div>
                 )}
               </section>
+
+              {/* Middle Banner Slider */}
+              {midBanners.length > 0 && (
+                <div className="pt-2">
+                  <BannerSlider items={midBanners} onBannerClick={handleBannerClick} />
+                </div>
+              )}
 
               <section className="space-y-6 pt-2">
                 <div className="flex justify-between items-center">
@@ -235,6 +265,13 @@ export default function HomePage() {
               )}
             </section>
           )}
+        </div>
+      )}
+
+      {/* Bottom Banner Slider */}
+      {bottomBanners.length > 0 && (
+        <div className="pt-2">
+          <BannerSlider items={bottomBanners} onBannerClick={handleBannerClick} />
         </div>
       )}
 
