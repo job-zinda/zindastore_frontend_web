@@ -6,6 +6,7 @@ export default function SimpleCard({ item, type }) {
   const navigate = useNavigate();
   const linkTo = type === "course" ? `/course/${item.slug || item.id}` : `/service/${item.slug || item.id}`;
   const displayPrice = item.price || item.sale_price || item.base_price || "0.00";
+  const showPrice = type !== "service";
 
   // WhatsApp Let's Plan Trigger
   const handleLetsPlan = (e) => {
@@ -15,7 +16,8 @@ export default function SimpleCard({ item, type }) {
     let cleanNum = String(rawNum).replace(/\D/g, "");
     if (cleanNum.length === 10) cleanNum = "91" + cleanNum;
 
-    const fullMessage = `Hi, I am interested in: *${item.title || item.name}*\nPrice: ₹${displayPrice}\nLink: ${window.location.origin}${linkTo}`;
+    const priceLine = showPrice ? `\nPrice: ₹${displayPrice}` : "";
+    const fullMessage = `Hi, I am interested in: *${item.title || item.name}*${priceLine}\nLink: ${window.location.origin}${linkTo}`;
     window.open(`https://wa.me/${cleanNum}?text=${encodeURIComponent(fullMessage)}`, "_blank");
   };
 
@@ -45,7 +47,9 @@ export default function SimpleCard({ item, type }) {
           <p className="text-xs text-gray-500 line-clamp-1">
             {item.summary || item.description || item.author || "Upgrade your business"}
           </p>
-          <p className="text-lg font-extrabold text-[#9C4196] mt-1">₹{displayPrice}</p>
+          {showPrice && (
+            <p className="text-lg font-extrabold text-[#9C4196] mt-1">₹{displayPrice}</p>
+          )}
         </div>
       </Link>
 
